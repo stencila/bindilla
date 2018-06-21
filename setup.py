@@ -1,7 +1,10 @@
 import setuptools
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
+try:
+    with open("README.md", "r") as fh:
+        long_description = fh.read()
+except IOError:
+        long_description = None
 
 setuptools.setup(
     name='bindila',
