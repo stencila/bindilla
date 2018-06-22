@@ -7,7 +7,7 @@ def test_parse_environ():
     host = Host()
 
     assert host.parse_environ('gh/myorg/myrepo') == {
-        'id': 'binder://gh/myorg/myrepo@master',
+        'id': 'binder://gh/myorg/myrepo/master',
         'name': 'gh/myorg/myrepo',
         'version': 'master',
         'provider': 'gh',
@@ -16,7 +16,7 @@ def test_parse_environ():
     }
 
     assert host.parse_environ('gh/myorg/myrepo/branch') == {
-        'id': 'binder://gh/myorg/myrepo@branch',
+        'id': 'binder://gh/myorg/myrepo/branch',
         'name': 'gh/myorg/myrepo',
         'version': 'branch',
         'provider': 'gh',
@@ -39,7 +39,7 @@ def test_manifest():
     environs = manifest['environs']
     assert len(environs) == len(ENVIRONS) + 2
     assert environs[1] == {
-        'id': 'binder://gh/myorg/myrepo@branch',
+        'id': 'binder://gh/myorg/myrepo/branch',
         'name': 'gh/myorg/myrepo',
         'version': 'branch',
         'provider': 'gh',
