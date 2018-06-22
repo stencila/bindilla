@@ -140,7 +140,7 @@ class Host:
             binder['url'] = data.get('url')
             binder['token'] = data.get('token')
 
-    def proxy_binder(self, method, binder_id, path, body=None, mock=False):
+    def proxy_binder(self, method, binder_id, path, body=None):
         """
         Proxy requests through to the binder
 
@@ -153,14 +153,9 @@ class Host:
             return None
 
         url = binder['url'] + '/stencila-host/' + path
-        if mock:
-            with requests_mock.Mocker() as mocker:
-                mocker.get(url, text=url)
-                response = requests.get(url)
-        else:
-            response = getattr(requests, method.lower())(url, headers={
-                'Authorization': 'token %s' % binder['token']
-            }, data=body)
+        response = getattr(requests, method.lower())(url, headers={
+            'Authorization': 'token %s' % binder['token']
+        }, data=body)
 
         return response.text
 
