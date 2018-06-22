@@ -3,6 +3,9 @@ all: setup lint build
 setup:
 	pip install --user setuptools wheel pylint pytest
 
+setup:
+	pip install setuptools wheel pylint pytest tox-travis
+
 run:
 	python3 -m bindila
 

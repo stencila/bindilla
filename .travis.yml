@@ -6,7 +6,7 @@ python:
 cache: pip
 
 install:
-  - make setup
+  - make setup-travis
 
 script:
   - make lint
