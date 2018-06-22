@@ -3,7 +3,7 @@ all: setup lint build
 setup:
 	pip install --user setuptools wheel pylint pytest
 
-setup:
+setup-travis:
 	pip install setuptools wheel pylint pytest tox-travis
 
 run:
