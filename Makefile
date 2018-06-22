@@ -1,7 +1,7 @@
 all: setup lint build
 
 setup:
-	pip install --user setuptools wheel pylint
+	pip install --user setuptools wheel pylint pytest
 
 run:
 	python3 -m bindila
