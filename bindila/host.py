@@ -4,10 +4,12 @@ Module for defining a Stencila ``Host``
 
 import datetime
 import json
+import re
 import uuid
 
 import pytz
 import requests
+import requests_mock
 import sseclient
 from tornado.ioloop import IOLoop
 
@@ -20,7 +22,6 @@ class Host:
     """
 
     def __init__(self):
-
         # A list of environs available in manifest
         # Initialized with a list of defaults
         self._environs = [self.parse_environ(environ) for environ in ENVIRONS]
@@ -41,15 +42,15 @@ class Host:
         }
 
     @staticmethod
-    def parse_environ(environ_string):
+    def parse_environ(binder_path):
         """
-        Parse a Binder repo path into an environment spec
+        Parse a Binder path into an environment spec
 
         Binder repo paths have the pattern
         ```<provider-name>/<org-name>/<repo-name>/<branch|commit|tag>``
         The ``<branch|commit|tag>`` part is optional and defaults to ``master``
         """
-        parts = environ_string.split('/')
+        parts = binder_path.split('/')
         provider = parts[0]
         org = parts[1]
         repo = parts[2]
@@ -68,13 +69,14 @@ class Host:
             'repo': repo
         }
 
-    def launch_environ(self, environ_string):
+    def launch_environ(self, environ_id, mock=False):
         """
         Launch an environment
         """
 
         # Parse the environ string into an environ spec
-        environ = self.parse_environ(environ_string)
+        binder_path = re.match(r'^binder:\/\/(.+)', environ_id).group(1)
+        environ = self.parse_environ(binder_path)
 
         # Generate a unique id for the binder
         binder_id = uuid.uuid4().hex
@@ -90,7 +92,7 @@ class Host:
         self._binders[binder_id] = binder
 
         # Launch the binder asynchronously
-        IOLoop.current().spawn_callback(self.launch_binder, binder)
+        IOLoop.current().add_callback(self.launch_binder, binder, mock)
 
         # Return a local path the client can use to connect
         # to the binder
@@ -102,7 +104,7 @@ class Host:
     def inspect_environ(self, binder_id):
         return self._binders.get(binder_id)
 
-    async def launch_binder(self, binder):
+    async def launch_binder(self, binder, mock=False):
         """
         Launches the binder
         """
@@ -112,9 +114,19 @@ class Host:
         url = 'https://mybinder.org/build/%(provider)s/%(org)s/%(repo)s/%(version)s' % environ
 
         # Ask mybinder.org to launch the binder
-        response = requests.get(url, stream=True)
+        binder['request'] = {
+            'time': datetime.datetime.now(tz=pytz.UTC).isoformat(),
+            'url': url
+        }
+        if mock:
+            with requests_mock.Mocker() as mocker:
+                mocker.get(url)
+                response = requests.get(url, stream=True)
+        else:
+            response = requests.get(url, stream=True)
+
         if response.status_code != 200:
-            print(response.text)
+            raise RuntimeError(response.text)
 
         # Record the event stream
         client = sseclient.SSEClient(response)

@@ -1,9 +1,12 @@
-from bindila.host import HOST
+from bindila.host import Host
 from bindila.environs import ENVIRONS
+from tornado.ioloop import IOLoop
 
 
 def test_parse_environ():
-    assert HOST.parse_environ('gh/myorg/myrepo') == {
+    host = Host()
+
+    assert host.parse_environ('gh/myorg/myrepo') == {
         'id': 'binder://gh/myorg/myrepo@master',
         'name': 'gh/myorg/myrepo',
         'version': 'master',
@@ -12,7 +15,7 @@ def test_parse_environ():
         'repo': 'myrepo'
     }
 
-    assert HOST.parse_environ('gh/myorg/myrepo/branch') == {
+    assert host.parse_environ('gh/myorg/myrepo/branch') == {
         'id': 'binder://gh/myorg/myrepo@branch',
         'name': 'gh/myorg/myrepo',
         'version': 'branch',
@@ -23,11 +26,13 @@ def test_parse_environ():
 
 
 def test_manifest():
-    manifest = HOST.manifest()
+    host = Host()
+
+    manifest = host.manifest()
     environs = manifest['environs']
     assert len(environs) == len(ENVIRONS)
 
-    manifest = HOST.manifest([
+    manifest = host.manifest([
         'gh/myorg/myrepo',
         'gh/myorg/myrepo/branch'
     ])
@@ -41,3 +46,25 @@ def test_manifest():
         'org': 'myorg',
         'repo': 'myrepo'
     }
+
+
+def test_launch_environ():
+    host = Host()
+
+    assert len(host._binders) == 0
+
+    ioloop = IOLoop.current()
+
+    async def run():
+        result = host.launch_environ('binder://gh/org1/repo1', mock=True)
+        ioloop.call_later(0.5, ioloop.stop)
+
+    ioloop.add_callback(run)
+    ioloop.start()
+
+    assert len(host._binders) == 1
+
+    binder = next(iter(host._binders.values()))
+    assert 'request' in binder
+    assert binder['request']['url'] == 'https://mybinder.org/build/gh/org1/repo1/master'
+    assert binder['events'] == []

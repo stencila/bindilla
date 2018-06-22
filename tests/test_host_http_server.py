@@ -32,7 +32,3 @@ class TestV0App(AsyncHTTPTestCase):
         response = self.fetch(url)
         self.assertEqual(response.code, 200)
         self.assertEqual(json.loads(response.body), HOST.manifest(environs))
-
-    def skip_test_launch(self):
-        response = self.fetch('/v0/environ/gh/nokome/stencila-binder', method='POST')
-        self.assertEqual(response.code, 200)

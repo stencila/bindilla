@@ -29,6 +29,7 @@ setuptools.setup(
     install_requires=[
         'pytz',
         'requests',
+        'requests_mock',
         'sseclient-py',
         'tornado'
     ]
