@@ -38,7 +38,9 @@ class Host:
             'stencila': {
                 'package': 'bindila'
             },
-            'environs': environs
+            'environs': environs,
+            'types': [],  # v0 API
+            'services': []  # v1 API
         }
 
     @staticmethod
@@ -56,7 +58,7 @@ class Host:
         repo = parts[2]
         ref = parts[3] if len(parts) == 4 else 'master'
         name = '{}/{}/{}'.format(provider, org, repo)
-        idd = 'binder://{}@{}'.format(name, ref)
+        idd = 'binder://{}/{}'.format(name, ref)
         return {
             # Properties required by Host API
             'id': idd,
@@ -92,7 +94,7 @@ class Host:
         self._binders[binder_id] = binder
 
         # Launch the binder asynchronously
-        IOLoop.current().add_callback(self.launch_binder, binder, mock)
+        IOLoop.current().spawn_callback(self.launch_binder, binder, mock)
 
         # Return a local path the client can use to connect
         # to the binder
@@ -138,16 +140,29 @@ class Host:
             binder['url'] = data.get('url')
             binder['token'] = data.get('token')
 
-    def proxy_binder(self, binder_id, path):
+    def proxy_binder(self, method, binder_id, path, body=None, mock=False):
         """
         Proxy requests through to the binder
 
         Need to provide token and append `stencila-host` to URL
-        e.g https://hub.mybinder.org/user/nokome-stencila-binder-u15exp4q/stencila-host
+        e.g https://hub.mybinder.org/user/stencila-images-mukdlnm5/stencila-host
         """
         binder = self._binders.get(binder_id)
-        print(binder, binder_id, path)
-        return '{}'
+
+        if binder['phase'] != 'ready':
+            return None
+
+        url = binder['url'] + '/stencila-host/' + path
+        if mock:
+            with requests_mock.Mocker() as mocker:
+                mocker.get(url, text=url)
+                response = requests.get(url)
+        else:
+            response = getattr(requests, method.lower())(url, headers={
+                'Authorization': 'token %s' % binder['token']
+            }, data=body)
+
+        return response.text
 
 # The Host instance to be served
 HOST = Host()

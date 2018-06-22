@@ -29,11 +29,11 @@ class BaseHandler(RequestHandler):
         self.set_header('Access-Control-Allow-Headers', 'Content-Type')
         self.set_header('Access-Control-Max-Age', '86400')
 
-    def options(self):
+    def options(self, *args, **kwargs):
         self.set_status(204)
         self.finish()
 
-    def respond(self, value):
+    def send(self, value):
         body = json.dumps(value, indent=2)
         self.write(body)
 
@@ -48,7 +48,7 @@ class IndexHandler(BaseHandler):
 class ManifestHandler(BaseHandler):
 
     def get(self, environs):
-        self.respond(
+        self.send(
             HOST.manifest(environs.split(',') if environs else None)
         )
 
@@ -56,12 +56,12 @@ class ManifestHandler(BaseHandler):
 class EnvironHandler(BaseHandler):
 
     def post(self, environ_or_id):
-        self.respond(
+        self.send(
             HOST.launch_environ(environ_or_id)
         )
 
     def get(self, environ_or_id):
-        self.respond(
+        self.send(
             HOST.inspect_environ(environ_or_id)
         )
 
@@ -69,8 +69,18 @@ class EnvironHandler(BaseHandler):
 class ProxyHandler(BaseHandler):
 
     def get(self, idd, path):
-        self.respond(
-            HOST.proxy_binder(idd, path)
+        self.write(
+            HOST.proxy_binder('GET', idd, path)
+        )
+
+    def post(self, idd, path):
+        self.write(
+            HOST.proxy_binder('POST', idd, path, self.request.body)
+        )
+
+    def put(self, idd, path):
+        self.write(
+            HOST.proxy_binder('PUT', idd, path, self.request.body)
         )
 
 
