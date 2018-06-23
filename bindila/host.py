@@ -8,10 +8,7 @@ import re
 import uuid
 
 import pytz
-import requests
-import requests_mock
-import sseclient
-from tornado.ioloop import IOLoop
+from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 
 from .environs import ENVIRONS
 
@@ -26,9 +23,14 @@ class Host:
         # Initialized with a list of defaults
         self._environs = [self.parse_environ(environ) for environ in ENVIRONS]
 
+        self._binder_host = 'https://mybinder.org'
+        #self._binder_host = 'http://localhost:4444'
+
         # A list of binders that have been launched by
         # this Bindila instance
         self._binders = {}
+
+        self.http_client = AsyncHTTPClient()
 
     def manifest(self, extra_environs=None):
         environs = self._environs
@@ -39,6 +41,7 @@ class Host:
                 'package': 'bindila'
             },
             'environs': environs,
+            # Properties expected by the client
             'types': [],  # v0 API
             'services': []  # v1 API
         }
@@ -71,7 +74,7 @@ class Host:
             'repo': repo
         }
 
-    def launch_environ(self, environ_id, mock=False):
+    async def launch_environ(self, environ_id):
         """
         Launch an environment
         """
@@ -91,56 +94,56 @@ class Host:
             'phase': None,
             'events': []
         }
-        self._binders[binder_id] = binder
-
-        # Launch the binder asynchronously
-        IOLoop.current().spawn_callback(self.launch_binder, binder, mock)
-
-        # Return a local path the client can use to connect
-        # to the binder
-        return {
-            'id': binder_id,
-            'path': '/proxy/' + binder_id
-        }
-
-    def inspect_environ(self, binder_id):
-        return self._binders.get(binder_id)
-
-    async def launch_binder(self, binder, mock=False):
-        """
-        Launches the binder
-        """
 
         # Build the binder URL from the environ
         environ = binder['environ']
-        url = 'https://mybinder.org/build/%(provider)s/%(org)s/%(repo)s/%(version)s' % environ
+        url = self._binder_host + '/build/%(provider)s/%(org)s/%(repo)s/%(version)s' % environ
 
         # Ask mybinder.org to launch the binder
         binder['request'] = {
             'time': datetime.datetime.now(tz=pytz.UTC).isoformat(),
             'url': url
         }
-        if mock:
-            with requests_mock.Mocker() as mocker:
-                mocker.get(url)
-                response = requests.get(url, stream=True)
+
+        def handle_stream(event):
+            event = event.decode()
+            print(event)
+            if ":" in event:
+                (field, value) = event.split(":", 1)
+                field = field.strip()
+                if field == 'data':
+                    data = json.loads(value)
+                    data['time'] = datetime.datetime.now(tz=pytz.UTC).isoformat()
+                    binder['events'].append(data)
+                    binder['phase'] = data.get('phase')
+                    binder['base_url'] = data.get('url')
+                    binder['token'] = data.get('token')
+
+        request = HTTPRequest(
+            url=url,
+            method='GET',
+            headers={'content-type': 'text/event-stream'},
+            request_timeout=0,
+            streaming_callback=handle_stream
+        )
+        await self.http_client.fetch(request)
+
+        if 0:
+            # Return a local path the client can use to connect
+            # to the binder
+            binder['path'] = '/proxy/' + binder_id
         else:
-            response = requests.get(url, stream=True)
+            if binder.get('base_url'):
+                binder['url'] = binder['base_url'] + 'stencila-host'
 
-        if response.status_code != 200:
-            raise RuntimeError(response.text)
+        self._binders[binder_id] = binder
 
-        # Record the event stream
-        client = sseclient.SSEClient(response)
-        for event in client.events():
-            data = json.loads(event.data)
-            data['time'] = datetime.datetime.now(tz=pytz.UTC).isoformat()
-            binder['events'].append(data)
-            binder['phase'] = data.get('phase')
-            binder['url'] = data.get('url')
-            binder['token'] = data.get('token')
+        return binder
 
-    def proxy_binder(self, method, binder_id, path, body=None):
+    def inspect_environ(self, binder_id):
+        return self._binders.get(binder_id)
+
+    async def proxy_environ(self, method, binder_id, path, body=None):
         """
         Proxy requests through to the binder
 
@@ -148,16 +151,24 @@ class Host:
         e.g https://hub.mybinder.org/user/stencila-images-mukdlnm5/stencila-host
         """
         binder = self._binders.get(binder_id)
+        if not binder:
+            raise RuntimeError('No such binder: {}'.format(binder_id))
 
         if binder['phase'] != 'ready':
             return None
 
-        url = binder['url'] + '/stencila-host/' + path
-        response = getattr(requests, method.lower())(url, headers={
-            'Authorization': 'token %s' % binder['token']
-        }, data=body)
+        url = binder['base_url'] + 'stencila-host/' + path
+        request = HTTPRequest(
+            url=url,
+            method=method,
+            headers={
+                'Authorization': 'token %s' % binder['token']
+            },
+            body=body
+        )
+        response = await self.http_client.fetch(request)
 
-        return response.text
+        return response.body
 
 # The Host instance to be served
 HOST = Host()

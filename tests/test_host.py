@@ -56,7 +56,7 @@ def test_launch_environ():
     ioloop = IOLoop.current()
 
     async def run():
-        result = host.launch_environ('binder://gh/org1/repo1', mock=True)
+        result = await host.launch_environ('binder://gh/org1/repo1')
         ioloop.call_later(0.5, ioloop.stop)
 
     ioloop.add_callback(run)

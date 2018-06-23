@@ -48,53 +48,41 @@ class IndexHandler(BaseHandler):
 class ManifestHandler(BaseHandler):
 
     def get(self, environs):
-        self.send(
-            HOST.manifest(environs.split(',') if environs else None)
-        )
+        self.send(HOST.manifest(environs.split(',') if environs else None))
 
 
 class EnvironHandler(BaseHandler):
 
-    def post(self, environ_or_id):
-        self.send(
-            HOST.launch_environ(environ_or_id)
-        )
+    async def post(self, environ_or_id):
+        self.send(await HOST.launch_environ(environ_or_id))
 
-    def get(self, environ_or_id):
-        self.send(
-            HOST.inspect_environ(environ_or_id)
-        )
+    def get(self, idd):
+        self.send(HOST.inspect_environ(idd))
 
 
 class ProxyHandler(BaseHandler):
 
-    def get(self, idd, path):
-        self.write(
-            HOST.proxy_binder('GET', idd, path)
-        )
+    async def get(self, idd, path):
+        self.write(await HOST.proxy_environ('GET', idd, path))
 
-    def post(self, idd, path):
-        self.write(
-            HOST.proxy_binder('POST', idd, path, self.request.body)
-        )
+    async def post(self, idd, path):
+        self.write(await HOST.proxy_environ('POST', idd, path, self.request.body))
 
-    def put(self, idd, path):
-        self.write(
-            HOST.proxy_binder('PUT', idd, path, self.request.body)
-        )
+    async def put(self, idd, path):
+        self.write(await HOST.proxy_environ('PUT', idd, path, self.request.body))
 
 
 def make():
     v1_app = Application([
         (r'^/?(?P<environs>.*?)/v1/manifest/?', ManifestHandler),
         (r'^.*?/v1/environs/(?P<environ_or_id>.+)', EnvironHandler),
-        (r'^.*?/v1/proxy/.+', ProxyHandler)
+        (r'^.*?/v1/proxy/(?P<idd>[^\/]+)/(?P<path>.+)', ProxyHandler)
     ])
 
     v0_app = Application([
         (r'^/?(?P<environs>.*?)/v0/manifest/?', ManifestHandler),
         (r'^.*?/v0/environ/(?P<environ_or_id>.+)', EnvironHandler),
-        (r'^.*?/v0/proxy/(?P<idd>[^\/]+)/?(?P<path>.+)', ProxyHandler)
+        (r'^.*?/v0/proxy/(?P<idd>[^\/]+)/(?P<path>.+)', ProxyHandler)
     ])
 
     index_app = Application([
