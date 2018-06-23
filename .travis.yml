@@ -9,6 +9,5 @@ install:
   - make setup-travis
 
 script:
-  - make lint
   - make test
 
