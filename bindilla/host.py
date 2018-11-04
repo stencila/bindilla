@@ -27,7 +27,7 @@ class Host:
         #self._binder_host = 'http://localhost:4444'
 
         # A list of binders that have been launched by
-        # this Bindila instance
+        # this Bindilla instance
         self._binders = {}
 
         self.http_client = AsyncHTTPClient()
@@ -38,7 +38,7 @@ class Host:
             environs = [self.parse_environ(environ) for environ in extra_environs] + self._environs
         return {
             'stencila': {
-                'package': 'bindila'
+                'package': 'bindilla'
             },
             'environs': environs,
             # Properties expected by the client

@@ -1,6 +1,6 @@
 import json
 
-from bindila.host_http_server import HOST, make
+from bindilla.host_http_server import HOST, make
 from tornado.testing import AsyncHTTPTestCase
 
 

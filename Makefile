@@ -7,26 +7,26 @@ setup-travis:
 	pip install setuptools wheel pylint pytest tox-travis
 
 run:
-	python3 -m bindila
+	python3 -m bindilla
 
 build:
 	python3 setup.py bdist_wheel
 .PHONY: build
 
 build-docker:
-	docker build --tag stencila/bindila .
+	docker build --tag stencila/bindilla .
 
 run-docker:
-	docker run -p 8888:8888 -it stencila/bindila
+	docker run -p 8888:8888 -it stencila/bindilla
 
 install:
 	pip install --user .
 
 lint:
-	pylint bindila
+	pylint bindilla
 
 test:
 	tox
 
 clean:
-	rm -rf bindila/*.pyc build dist bindila.egg-info
+	rm -rf bindilla/*.pyc build dist bindilla.egg-info

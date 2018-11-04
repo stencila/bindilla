@@ -1,5 +1,5 @@
-from bindila.host import Host
-from bindila.environs import ENVIRONS
+from bindilla.host import Host
+from bindilla.environs import ENVIRONS
 from tornado.ioloop import IOLoop
 
 

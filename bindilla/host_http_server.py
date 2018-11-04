@@ -15,7 +15,7 @@ from .host import HOST
 
 class BaseHandler(RequestHandler):
     def set_default_headers(self):
-        self.set_header('Server', 'Bindila / Tornado %s' % tornado.version)
+        self.set_header('Server', 'Bindilla / Tornado %s' % tornado.version)
         self.set_header('Content-Type', 'application/json')
 
         # Use origin of request to avoid browser errors like
@@ -42,7 +42,7 @@ class IndexHandler(BaseHandler):
 
     def get(self, *args, **kwargs):
         self.set_header('Content-Type', 'text/html')
-        return self.write('<p>Hello, this is Bindila. See the docs.</p>')
+        return self.write('<p>Hello, this is Bindilla. See the docs.</p>')
 
 
 class ManifestHandler(BaseHandler):

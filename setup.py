@@ -7,13 +7,13 @@ except IOError:
         long_description = None
 
 setuptools.setup(
-    name='bindila',
+    name='bindilla',
     version='0.1.0',
     author='Nokome Bentley',
     description='A Stencila Host backed by Binder',
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url='https://github.com/stencila/bindila',
+    url='https://github.com/stencila/bindilla',
     packages=setuptools.find_packages(),
     keywords=['Jupyter', 'Stencila'],
     classifiers=[

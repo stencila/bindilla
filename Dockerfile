@@ -1,12 +1,12 @@
 FROM python:3
 
-RUN useradd -ms /bin/bash bindila
-WORKDIR /home/bindila
-USER bindila
+RUN useradd -ms /bin/bash bindilla
+WORKDIR /home/bindilla
+USER bindilla
 
 ADD setup.py .
 RUN pip3 install . --user
 
-ADD bindila bindila
+ADD bindilla bindilla
 
-CMD ["python3", "-m", "bindila"]
+CMD ["python3", "-m", "bindilla"]

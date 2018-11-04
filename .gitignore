@@ -1,6 +1,6 @@
 /.pytest_cache
 /.tox
-/bindila.egg-info
+/bindilla.egg-info
 /build
 /dist
 __pycache__
