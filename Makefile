@@ -28,5 +28,8 @@ lint:
 test:
 	tox
 
+cover:
+	tox -e cover
+
 clean:
 	rm -rf bindilla/*.pyc build dist bindilla.egg-info

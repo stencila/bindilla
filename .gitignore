@@ -1,6 +1,8 @@
+/.coverage
 /.pytest_cache
 /.tox
 /bindilla.egg-info
 /build
+/coverage.xml
 /dist
 __pycache__

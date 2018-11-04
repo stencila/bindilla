@@ -1,13 +1,13 @@
 language: python
 
 python:
-  - "3.6"
-
-cache: pip
+  - 3.7
 
 install:
   - make setup-travis
 
 script:
-  - make test
+  - make cover
 
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
