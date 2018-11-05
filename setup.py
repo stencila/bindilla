@@ -10,7 +10,7 @@ setuptools.setup(
     name='bindilla',
     version='0.1.0',
     author='Nokome Bentley',
-    description='A Stencila Host backed by Binder',
+    description='A Stencila to Binder bridge',
     long_description=long_description,
     long_description_content_type="text/markdown",
     url='https://github.com/stencila/bindilla',

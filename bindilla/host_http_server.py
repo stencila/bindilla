@@ -1,7 +1,3 @@
-"""
-Module for serving the ``Host`` API via HTTP
-"""
-
 import json
 
 import tornado
@@ -14,6 +10,13 @@ from .host import HOST
 
 
 class BaseHandler(RequestHandler):
+    """
+    A base class for all request handlers.
+
+    Adds necessary headers and handles `OPTIONS` requests
+    needed for CORS.
+    """
+
     def set_default_headers(self):
         self.set_header('Server', 'Bindilla / Tornado %s' % tornado.version)
         self.set_header('Content-Type', 'application/json')
@@ -39,19 +42,49 @@ class BaseHandler(RequestHandler):
 
 
 class IndexHandler(BaseHandler):
+    """
+    Handles requests to the index/home page.
+    """
 
     def get(self, *args, **kwargs):
         self.set_header('Content-Type', 'text/html')
-        return self.write('<p>Hello, this is Bindilla. See the docs.</p>')
+        return self.write('''
+        <!DOCTYPE html>
+        <html lang="en">
+            <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width">
+                <style>
+                    p {
+                        margin: 3em auto;
+                        width: 20em;
+                        font-family: sans;
+                        font-size: 1.2em;
+                        color: #444;
+                        text-align: center;
+                    }
+                </style>
+            </head>
+            <body>
+                <p>👋 Hello. I\'m <a href="https://github.com/stencila/bindilla">Bindilla</a> 🔗, a bridge between Stencila and Binder ✨</p>
+            </body>
+        </html
+        ''')
 
 
 class ManifestHandler(BaseHandler):
+    """
+    Handles requests for the `Host` manifest.
+    """
 
     def get(self, environs):
         self.send(HOST.manifest(environs.split(',') if environs else None))
 
 
 class EnvironHandler(BaseHandler):
+    """
+    Handles requests to launch and inspect environments.
+    """
 
     async def post(self, environ_or_id):
         self.send(await HOST.launch_environ(environ_or_id))
@@ -61,6 +94,9 @@ class EnvironHandler(BaseHandler):
 
 
 class ProxyHandler(BaseHandler):
+    """
+    Proxies requests through to the container running on Binder.
+    """
 
     async def get(self, idd, path):
         self.write(await HOST.proxy_environ('GET', idd, path))
@@ -73,12 +109,18 @@ class ProxyHandler(BaseHandler):
 
 
 def make():
+    """
+    Make the Tornado `RuleRouter`.
+    """
+
+    # API v1 endpoints
     v1_app = Application([
         (r'^/?(?P<environs>.*?)/v1/manifest/?', ManifestHandler),
         (r'^.*?/v1/environs/(?P<environ_or_id>.+)', EnvironHandler),
         (r'^.*?/v1/proxy/(?P<idd>[^\/]+)/(?P<path>.+)', ProxyHandler)
     ])
 
+    # API v0 endpoints
     v0_app = Application([
         (r'^/?(?P<environs>.*?)/v0/manifest/?', ManifestHandler),
         (r'^.*?/v0/environ/(?P<environ_or_id>.+)', EnvironHandler),
@@ -97,6 +139,9 @@ def make():
 
 
 def run():
+    """
+    Run the HTTP server.
+    """
     router = make()
     server = HTTPServer(router)
     server.listen(8888)

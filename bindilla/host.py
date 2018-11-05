@@ -1,7 +1,3 @@
-"""
-Module for defining a Stencila ``Host``
-"""
-
 import datetime
 import json
 import re
@@ -15,24 +11,30 @@ from .environs import ENVIRONS
 
 class Host:
     """
-    A Stencila ``Host``
+    A Stencila `Host` that launches, and then proxies to, a container on Binder.
     """
 
     def __init__(self):
-        # A list of environs available in manifest
-        # Initialized with a list of defaults
+        # A list of default environs available in manifest
         self._environs = [self.parse_environ(environ) for environ in ENVIRONS]
 
+        # The Binder host URL. Usually ``https://mybinder.org`` but could
+        # be some other deployment of Binder, or a local mocking server
         self._binder_host = 'https://mybinder.org'
-        #self._binder_host = 'http://localhost:4444'
+        self._binder_host = 'http://localhost:4444'
 
         # A list of binders that have been launched by
-        # this Bindilla instance
+        # this Bindilla instance. Needed for the proxying.
         self._binders = {}
 
-        self.http_client = AsyncHTTPClient()
+        # An asychronous HTTP client used to talk to Binder and
+        # the containers that it hosts
+        self._http_client = AsyncHTTPClient()
 
     def manifest(self, extra_environs=None):
+        """
+        Return the manifest for this host.
+        """
         environs = self._environs
         if extra_environs:
             environs = [self.parse_environ(environ) for environ in extra_environs] + self._environs
@@ -49,11 +51,10 @@ class Host:
     @staticmethod
     def parse_environ(binder_path):
         """
-        Parse a Binder path into an environment spec
+        Parse a Binder path into a Stencila environment spec.
 
-        Binder repo paths have the pattern
-        ```<provider-name>/<org-name>/<repo-name>/<branch|commit|tag>``
-        The ``<branch|commit|tag>`` part is optional and defaults to ``master``
+        Binder repo paths have the pattern `<provider-name>/<org-name>/<repo-name>/<branch|commit|tag>`
+        The `<branch|commit|tag> part is optional and defaults to `master`.
         """
         parts = binder_path.split('/')
         provider = parts[0]
@@ -76,7 +77,10 @@ class Host:
 
     async def launch_environ(self, environ_id):
         """
-        Launch an environment
+        Launch an environment on Binder.
+
+        This sends a request to Binder to create a new container based on the
+        environment identifier.
         """
 
         # Parse the environ string into an environ spec
@@ -126,26 +130,27 @@ class Host:
             request_timeout=0,
             streaming_callback=handle_stream
         )
-        await self.http_client.fetch(request)
+        await self._http_client.fetch(request)
 
-        if 0:
-            # Return a local path the client can use to connect
-            # to the binder
-            binder['path'] = '/proxy/' + binder_id
-        else:
-            if binder.get('base_url'):
-                binder['url'] = binder['base_url'] + 'stencila-host'
+        # Return a local path the client can use to connect
+        # to the binder
+        #    binder['path'] = '/proxy/' + binder_id
+        if binder.get('base_url'):
+            binder['url'] = binder['base_url'] + 'stencila-host'
 
         self._binders[binder_id] = binder
 
         return binder
 
     def inspect_environ(self, binder_id):
+        """
+        Get details about a binder.
+        """
         return self._binders.get(binder_id)
 
     async def proxy_environ(self, method, binder_id, path, body=None):
         """
-        Proxy requests through to the binder
+        Proxy requests through to the binder.
 
         Need to provide token and append `stencila-host` to URL
         e.g https://hub.mybinder.org/user/stencila-images-mukdlnm5/stencila-host
@@ -166,7 +171,7 @@ class Host:
             },
             body=body
         )
-        response = await self.http_client.fetch(request)
+        response = await self._http_client.fetch(request)
 
         return response.body
 

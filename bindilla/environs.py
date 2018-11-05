@@ -1,6 +1,6 @@
 """
 Module which defines a default set of environs to be available
-in Bindilla's manifest
+in Bindilla's manifest.
 """
 
 ENVIRONS = [
