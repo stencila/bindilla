@@ -1,4 +1,4 @@
 [MASTER]
 
-disable=abstract-method,arguments-differ,missing-docstring
+disable=abstract-method,arguments-differ,missing-docstring,import-error
 max-line-length=120

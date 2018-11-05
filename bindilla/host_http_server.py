@@ -32,7 +32,7 @@ class BaseHandler(RequestHandler):
         self.set_header('Access-Control-Allow-Headers', 'Content-Type')
         self.set_header('Access-Control-Max-Age', '86400')
 
-    def options(self, *args, **kwargs):
+    def options(self, *args, **kwargs): #pylint: disable=unused-argument
         self.set_status(204)
         self.finish()
 
@@ -46,7 +46,7 @@ class IndexHandler(BaseHandler):
     Handles requests to the index/home page.
     """
 
-    def get(self, *args, **kwargs):
+    def get(self, *args, **kwargs): #pylint: disable=unused-argument
         self.set_header('Content-Type', 'text/html')
         return self.write('''
         <!DOCTYPE html>
