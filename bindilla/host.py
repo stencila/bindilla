@@ -14,14 +14,23 @@ class Host:
     A Stencila `Host` that launches, and then proxies to, a container on Binder.
     """
 
-    def __init__(self):
+    def __init__(self, binder_host = 'https://mybinder.org', proxy = True):
+        """
+        Construct a host.
+
+        :param binder_host: The Binder host URL. Usually `https://mybinder.org` but could
+                            be some other deployment of Binder.
+        :param proxy: Should this proxy requests to the Binder container itself?
+        """
+
         # A list of default environs available in manifest
         self._environs = [self.parse_environ(environ) for environ in ENVIRONS]
 
-        # The Binder host URL. Usually ``https://mybinder.org`` but could
-        # be some other deployment of Binder, or a local mocking server
-        self._binder_host = 'https://mybinder.org'
-        self._binder_host = 'http://localhost:4444'
+        # The Binder host URL.
+        self._binder_host = binder_host
+
+        # Switch proxying on/off.
+        self._proxy = proxy
 
         # A list of binders that have been launched by
         # this Bindilla instance. Needed for the proxying.
@@ -110,18 +119,26 @@ class Host:
         }
 
         def handle_stream(event):
+            """
+            Handle the SSE event stream from Binder
+            """
             event = event.decode()
             print(event)
             if ":" in event:
                 (field, value) = event.split(":", 1)
                 field = field.strip()
                 if field == 'data':
-                    data = json.loads(value)
-                    data['time'] = datetime.datetime.now(tz=pytz.UTC).isoformat()
-                    binder['events'].append(data)
-                    binder['phase'] = data.get('phase')
-                    binder['base_url'] = data.get('url')
-                    binder['token'] = data.get('token')
+                    try:
+                        data = json.loads(value)
+                    except Exception as error:
+                        print(error)
+                        print(value)
+                    else:
+                        data['time'] = datetime.datetime.now(tz=pytz.UTC).isoformat()
+                        binder['events'].append(data)
+                        binder['phase'] = data.get('phase')
+                        binder['base_url'] = data.get('url')
+                        binder['token'] = data.get('token')
 
         request = HTTPRequest(
             url=url,
@@ -132,11 +149,15 @@ class Host:
         )
         await self._http_client.fetch(request)
 
-        # Return a local path the client can use to connect
-        # to the binder
-        #    binder['path'] = '/proxy/' + binder_id
-        if binder.get('base_url'):
-            binder['url'] = binder['base_url'] + 'stencila-host'
+        # Determine which URL the client should use to connect to the Binder container
+        if self._proxy:
+            # Use a local path on this server to proxy to the binder (suppling token etc)
+            binder['path'] = '/proxy/' + binder_id
+        else:
+            # Use the URL of the binder to connect to the remote host directly
+            # (requires that there is no token required on the binder)
+            if binder.get('base_url'):
+                binder['url'] = binder['base_url'] + 'stencila-host'
 
         self._binders[binder_id] = binder
 
