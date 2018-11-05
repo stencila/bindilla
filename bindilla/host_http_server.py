@@ -78,7 +78,10 @@ class ManifestHandler(BaseHandler):
     """
 
     def get(self, environs):
-        self.send(HOST.manifest(environs.split(',') if environs else None))
+        try:
+            self.send(HOST.manifest(environs.split(',') if environs else None))
+        except RuntimeError as error:
+            self.send(str(error))
 
 
 class EnvironHandler(BaseHandler):

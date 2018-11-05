@@ -14,13 +14,14 @@ class Host:
     A Stencila `Host` that launches, and then proxies to, a container on Binder.
     """
 
-    def __init__(self, binder_host = 'https://mybinder.org', proxy = True):
+    def __init__(self, binder_host='https://mybinder.org', proxy=True):
         """
         Construct a host.
 
         :param binder_host: The Binder host URL. Usually `https://mybinder.org` but could
                             be some other deployment of Binder.
-        :param proxy: Should this proxy requests to the Binder container itself?
+        :param proxy: Should this proxy requests to the Binder container or just
+                      return a URL to connect directly to it?
         """
 
         # A list of default environs available in manifest
@@ -66,6 +67,9 @@ class Host:
         The `<branch|commit|tag> part is optional and defaults to `master`.
         """
         parts = binder_path.split('/')
+        if len(parts) < 3:
+            raise ValueError('Invalid Binder repo path %s' % binder_path)
+
         provider = parts[0]
         org = parts[1]
         repo = parts[2]
@@ -130,7 +134,7 @@ class Host:
                 if field == 'data':
                     try:
                         data = json.loads(value)
-                    except Exception as error:
+                    except ValueError as error:
                         print(error)
                         print(value)
                     else:
@@ -173,12 +177,13 @@ class Host:
         """
         Proxy requests through to the binder.
 
-        Need to provide token and append `stencila-host` to URL
-        e.g https://hub.mybinder.org/user/stencila-images-mukdlnm5/stencila-host
+        This methods appends `/stencila-host` to the Binder container's URL
+        e.g https://hub.mybinder.org/user/org-repo-mukdlnm5/stencila-host
+        and puts the token into the header for authorization.
         """
         binder = self._binders.get(binder_id)
         if not binder:
-            raise RuntimeError('No such binder: {}'.format(binder_id))
+            raise ValueError('No such binder: {}'.format(binder_id))
 
         if binder['phase'] != 'ready':
             return None
