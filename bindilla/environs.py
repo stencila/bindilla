@@ -5,8 +5,7 @@ in Bindilla's manifest.
 
 ENVIRONS = [
     'gh/nokome/stencila-binder',
-    'gh/stencila/environs/base-binder',
-    'gh/stencila/environs/base-node-binder',
-    'gh/stencila/environs/base-py-binder',
-    'gh/stencila/environs/base-r-binder'
+    'gh/nuest/stencila-multi',
+    'gh/nuest/stencila-py',
+    'gh/nuest/stencila-r'
 ]
