@@ -23,8 +23,8 @@ class TestV0App(AsyncHTTPTestCase):
         self.assertEqual(json.loads(response.body), HOST.manifest())
 
         environs = [
-            'gh/org1/repo1',
-            'gh/org2/repo2'
+            'https://github.com/org1/repo1',
+            'https://github.com/org2/repo2'
         ]
         url = '/{}/v0/manifest'.format(
             ','.join(environs)

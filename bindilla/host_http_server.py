@@ -40,6 +40,16 @@ class BaseHandler(RequestHandler):
         body = json.dumps(value, indent=2)
         self.write(body)
 
+    def write_error(self, status_code, **kwargs):
+        if 'exc_info' in kwargs:
+            typ, value, tb = kwargs['exc_info']
+            if isinstance(value, ValueError):
+                self.set_status(400)
+                self.write(str(value))
+                return
+        RequestHandler.write_error(self, status_code, **kwargs) 
+
+
 
 class IndexHandler(BaseHandler):
     """
@@ -78,10 +88,7 @@ class ManifestHandler(BaseHandler):
     """
 
     def get(self, environs):
-        try:
-            self.send(HOST.manifest(environs.split(',') if environs else None))
-        except RuntimeError as error:
-            self.send(str(error))
+        self.send(HOST.manifest(environs.split(',') if environs else None))
 
 
 class EnvironHandler(BaseHandler):

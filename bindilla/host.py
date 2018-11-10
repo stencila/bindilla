@@ -5,10 +5,8 @@ import uuid
 
 import pytz
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
-AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
 
 from .environs import ENVIRONS
-
 
 class Host:
     """
@@ -40,6 +38,9 @@ class Host:
 
         # An asychronous HTTP client used to talk to Binder and
         # the containers that it hosts
+        # Use CurlAsyncHTTPClient because the default failed to run inside the Docker container
+        # for some reason
+        AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
         self._http_client = AsyncHTTPClient()
 
     def manifest(self, extra_environs=None):
@@ -60,26 +61,38 @@ class Host:
         }
 
     @staticmethod
-    def parse_environ(binder_path):
+    def parse_environ(environ_id):
         """
-        Parse a Binder path into a Stencila environment spec.
+        Parse an environ id into an environment spec to include in manifest.
 
-        Binder repo paths have the pattern `<provider-name>/<org-name>/<repo-name>/<branch|commit|tag>`
+        Also split out the parts needed for a Binder repo path, which have the pattern
+          `<provider-name>/<org-name>/<repo-name>/<branch|commit|tag>`
         The `<branch|commit|tag> part is optional and defaults to `master`.
         """
-        parts = binder_path.split('/')
-        if len(parts) < 3:
-            raise ValueError('Invalid Binder repo path %s' % binder_path)
+        match = re.match(r'^https?:\/\/(.+)', environ_id)
+        if match:
+            parts = match.group(1).split('/')
+            if len(parts) < 3:
+                raise ValueError('Environment id does not have enough parts in path: %s' % environ_id)
+        else:
+            raise ValueError('Environment id does not appear to be a URL: %s' % environ_id)
 
-        provider = parts[0]
+        providers = {
+            'github.com': 'gh',
+            'gitlab.com': 'gl'
+        }
+        provider = providers.get(parts[0])
+        if not provider:
+            raise ValueError('Environment provider should be one of: %s' % ', '.join(providers.keys()))
+
         org = parts[1]
         repo = parts[2]
         ref = parts[3] if len(parts) == 4 else 'master'
         name = '{}/{}/{}'.format(provider, org, repo)
-        idd = 'binder://{}/{}'.format(name, ref)
+
         return {
             # Properties required by Host API
-            'id': idd,
+            'id': environ_id,
             'name': name,
             'version': ref,
             # Additional properties used to
@@ -97,9 +110,8 @@ class Host:
         environment identifier.
         """
 
-        # Parse the environ string into an environ spec
-        binder_path = re.match(r'^binder:\/\/(.+)', environ_id).group(1)
-        environ = self.parse_environ(binder_path)
+        # Parse the environ id string into an environ spec
+        environ = self.parse_environ(environ_id)
 
         # Generate a unique id for the binder
         binder_id = uuid.uuid4().hex
@@ -132,11 +144,11 @@ class Host:
                         binder['phase'] = data.get('phase')
                         binder['base_url'] = data.get('url')
                         binder['token'] = data.get('token')
-       
+
         # Build the binder URL from the environ
         environ = binder['environ']
         url = self._binder_host + '/build/%(provider)s/%(org)s/%(repo)s/%(version)s' % environ
-        
+
         # Request container from the Binder host
         binder['request'] = {
             'time': datetime.datetime.now(tz=pytz.UTC).isoformat(),

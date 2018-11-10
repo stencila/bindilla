@@ -6,8 +6,8 @@ from tornado.ioloop import IOLoop
 def test_parse_environ():
     host = Host()
 
-    assert host.parse_environ('gh/myorg/myrepo') == {
-        'id': 'binder://gh/myorg/myrepo/master',
+    assert host.parse_environ('https://github.com/myorg/myrepo') == {
+        'id': 'https://github.com/myorg/myrepo',
         'name': 'gh/myorg/myrepo',
         'version': 'master',
         'provider': 'gh',
@@ -15,8 +15,8 @@ def test_parse_environ():
         'repo': 'myrepo'
     }
 
-    assert host.parse_environ('gh/myorg/myrepo/branch') == {
-        'id': 'binder://gh/myorg/myrepo/branch',
+    assert host.parse_environ('https://github.com/myorg/myrepo/branch') == {
+        'id': 'https://github.com/myorg/myrepo/branch',
         'name': 'gh/myorg/myrepo',
         'version': 'branch',
         'provider': 'gh',
@@ -33,13 +33,13 @@ def test_manifest():
     assert len(environs) == len(ENVIRONS)
 
     manifest = host.manifest([
-        'gh/myorg/myrepo',
-        'gh/myorg/myrepo/branch'
+        'https://github.com/myorg/myrepo',
+        'https://github.com/myorg/myrepo/branch'
     ])
     environs = manifest['environs']
     assert len(environs) == len(ENVIRONS) + 2
     assert environs[1] == {
-        'id': 'binder://gh/myorg/myrepo/branch',
+        'id': 'https://github.com/myorg/myrepo/branch',
         'name': 'gh/myorg/myrepo',
         'version': 'branch',
         'provider': 'gh',
@@ -56,7 +56,7 @@ def skip_test_launch_environ():
     ioloop = IOLoop.current()
 
     async def run():
-        result = await host.launch_environ('binder://gh/org1/repo1')
+        result = await host.launch_environ('https://github.com/org1/repo1')
         ioloop.call_later(0.5, ioloop.stop)
 
     ioloop.add_callback(run)
