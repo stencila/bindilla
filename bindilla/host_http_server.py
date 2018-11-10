@@ -5,7 +5,7 @@ from tornado.ioloop import IOLoop
 from tornado.routing import Rule, RuleRouter, PathMatches
 from tornado.httpserver import HTTPServer
 from tornado.web import Application, RequestHandler
-from tornado.httpclient import HTTPClientError #pylint: disable=no-name-in-module
+from tornado.httpclient import HTTPClientError
 
 from .host import HOST
 
@@ -109,7 +109,7 @@ class ProxyHandler(BaseHandler):
         try:
             response = await HOST.proxy_environ(method, binder_id, token, path, body)
         except HTTPClientError as error:
-            self.set_status(error.status_code)
+            self.set_status(error.code)
             self.write(str(error))
         else:
             for header, value in response.headers.get_all():
