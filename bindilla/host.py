@@ -5,6 +5,7 @@ import uuid
 
 import pytz
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
+AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
 
 from .environs import ENVIRONS
 
@@ -112,22 +113,11 @@ class Host:
             'events': []
         }
 
-        # Build the binder URL from the environ
-        environ = binder['environ']
-        url = self._binder_host + '/build/%(provider)s/%(org)s/%(repo)s/%(version)s' % environ
-
-        # Ask mybinder.org to launch the binder
-        binder['request'] = {
-            'time': datetime.datetime.now(tz=pytz.UTC).isoformat(),
-            'url': url
-        }
-
         def handle_stream(event):
             """
             Handle the SSE event stream from Binder
             """
             event = event.decode()
-            print(event)
             if ":" in event:
                 (field, value) = event.split(":", 1)
                 field = field.strip()
@@ -135,15 +125,23 @@ class Host:
                     try:
                         data = json.loads(value)
                     except ValueError as error:
-                        print(error)
-                        print(value)
+                        raise error
                     else:
                         data['time'] = datetime.datetime.now(tz=pytz.UTC).isoformat()
                         binder['events'].append(data)
                         binder['phase'] = data.get('phase')
                         binder['base_url'] = data.get('url')
                         binder['token'] = data.get('token')
-
+       
+        # Build the binder URL from the environ
+        environ = binder['environ']
+        url = self._binder_host + '/build/%(provider)s/%(org)s/%(repo)s/%(version)s' % environ
+        
+        # Request container from the Binder host
+        binder['request'] = {
+            'time': datetime.datetime.now(tz=pytz.UTC).isoformat(),
+            'url': url
+        }
         request = HTTPRequest(
             url=url,
             method='GET',
