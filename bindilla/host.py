@@ -1,7 +1,6 @@
 import datetime
 import json
 import re
-import uuid
 
 import pytz
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
@@ -31,10 +30,6 @@ class Host:
 
         # Switch proxying on/off.
         self._proxy = proxy
-
-        # A list of binders that have been launched by
-        # this Bindilla instance. Needed for the proxying.
-        self._binders = {}
 
         # An asychronous HTTP client used to talk to Binder and
         # the containers that it hosts
@@ -113,37 +108,34 @@ class Host:
         # Parse the environ id string into an environ spec
         environ = self.parse_environ(environ_id)
 
-        # Generate a unique id for the binder
-        binder_id = uuid.uuid4().hex
-
         # Record the binder's details so that we can record
         # events associated with it and retrieve them using `inspect`
         binder = {
-            'id': binder_id,
             'environ': environ,
             'phase': None,
             'events': []
         }
 
-        def handle_stream(event):
+        def handle_stream(events):
             """
             Handle the SSE event stream from Binder
             """
-            event = event.decode()
-            if ":" in event:
-                (field, value) = event.split(":", 1)
-                field = field.strip()
-                if field == 'data':
-                    try:
-                        data = json.loads(value)
-                    except ValueError as error:
-                        raise error
-                    else:
-                        data['time'] = datetime.datetime.now(tz=pytz.UTC).isoformat()
-                        binder['events'].append(data)
-                        binder['phase'] = data.get('phase')
-                        binder['base_url'] = data.get('url')
-                        binder['token'] = data.get('token')
+            events = events.decode().split('\n')
+            for event in events:
+                if ":" in event:
+                    (field, value) = event.split(":", 1)
+                    field = field.strip()
+                    if field == 'data':
+                        try:
+                            data = json.loads(value)
+                        except ValueError as error:
+                            raise error
+                        else:
+                            data['time'] = datetime.datetime.now(tz=pytz.UTC).isoformat()
+                            binder['events'].append(data)
+                            binder['phase'] = data.get('phase')
+                            binder['id'] = data.get('url')
+                            binder['token'] = data.get('token')
 
         # Build the binder URL from the environ
         environ = binder['environ']
@@ -164,26 +156,20 @@ class Host:
         await self._http_client.fetch(request)
 
         # Determine which URL the client should use to connect to the Binder container
+        binder_id = binder['id']
+        if binder_id[-1] == '/':
+            binder_id = binder_id[:-1]
         if self._proxy:
             # Use a local path on this server to proxy to the binder (suppling token etc)
-            binder['path'] = '/proxy/' + binder_id
+            binder['path'] = '/proxy/' + binder_id + '@' + binder['token']
         else:
             # Use the URL of the binder to connect to the remote host directly
             # (requires that there is no token required on the binder)
-            if binder.get('base_url'):
-                binder['url'] = binder['base_url'] + 'stencila-host'
-
-        self._binders[binder_id] = binder
+            binder['url'] = binder_id + '/stencila-host'
 
         return binder
 
-    def inspect_environ(self, binder_id):
-        """
-        Get details about a binder.
-        """
-        return self._binders.get(binder_id)
-
-    async def proxy_environ(self, method, binder_id, path, body=None):
+    async def proxy_environ(self, method, binder_id, token, path, body=None): #pylint: disable=too-many-arguments
         """
         Proxy requests through to the binder.
 
@@ -191,25 +177,17 @@ class Host:
         e.g https://hub.mybinder.org/user/org-repo-mukdlnm5/stencila-host
         and puts the token into the header for authorization.
         """
-        binder = self._binders.get(binder_id)
-        if not binder:
-            raise ValueError('No such binder: {}'.format(binder_id))
 
-        if binder['phase'] != 'ready':
-            return None
-
-        url = binder['base_url'] + 'stencila-host/' + path
+        url = binder_id + '/stencila-host/' + path
         request = HTTPRequest(
             url=url,
             method=method,
             headers={
-                'Authorization': 'token %s' % binder['token']
+                'Authorization': 'token %s' % token
             },
             body=body
         )
-        response = await self._http_client.fetch(request)
-
-        return response.body
+        return await self._http_client.fetch(request)
 
 # The Host instance to be served
 HOST = Host()
