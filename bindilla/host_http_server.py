@@ -33,6 +33,10 @@ class BaseHandler(RequestHandler):
         self.set_header('Access-Control-Allow-Headers', 'Content-Type')
         self.set_header('Access-Control-Max-Age', '86400')
 
+    def head(self, *args, **kwargs): #pylint: disable=unused-argument
+        self.set_status(204)
+        self.finish()
+
     def options(self, *args, **kwargs): #pylint: disable=unused-argument
         self.set_status(204)
         self.finish()
