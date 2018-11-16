@@ -185,6 +185,8 @@ class Host:
             headers={
                 'Authorization': 'token %s' % token
             },
+            # Default request timeout is 20s, increase to an hour
+            request_timeout=3600,
             body=body
         )
         return await self._http_client.fetch(request)
