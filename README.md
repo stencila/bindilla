@@ -1,12 +1,12 @@
-<p align="center">
-  <img src="bindilla.png" height="300px" alt="Bindilla. Aaarrrrgh!"/>
-</p>
-
-# Bindilla: a Stencila to Binder bridge
+# Bindilla
 
 [![Build status](https://travis-ci.org/stencila/bindilla.svg?branch=master)](https://travis-ci.org/stencila/bindilla)
 [![Code coverage](https://codecov.io/gh/stencila/bindilla/branch/master/graph/badge.svg)](https://codecov.io/gh/stencila/bindilla)
 [![Chat](https://badges.gitter.im/stencila/stencila.svg)](https://gitter.im/stencila/stencila)
+
+<p align="center">
+  <img src="bindilla.png" height="400px" alt="Bindilla. Aaarrrrgh!"/>
+</p>
 
 ## What?
 
@@ -14,7 +14,9 @@ Bindilla acts as a bridge between [Stencila](https://stenci.la) and [Binder](htt
 
 This bridge relies on [`nbstencilaproxy`](https://github.com/minrk/nbstencilaproxy) being in the container image that is launched by Binder. [`repo2docker`](https://github.com/jupyter/repo2docker) will detect Dar folders in a repo and install `nbstencilaproxy` and other necessary requirements automatically.
 
-![](screenshot.png)
+<p align="center">
+  <img src="screenshot.png"/>
+</p>
 
 ## Why?
 

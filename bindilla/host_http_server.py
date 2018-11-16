@@ -58,6 +58,9 @@ class BaseHandler(RequestHandler):
 class IndexHandler(BaseHandler):
     """
     Handles requests to the index/home page.
+
+    Just redirect to the Github repo. Don't use a 301, or 302, 
+    because that can cause load balancer helth checks to fail.
     """
 
     def get(self, *args, **kwargs): #pylint: disable=unused-argument
@@ -67,20 +70,10 @@ class IndexHandler(BaseHandler):
         <html lang="en">
             <head>
                 <meta charset="utf-8">
-                <meta name="viewport" content="width=device-width">
-                <style>
-                    p {
-                        margin: 3em auto;
-                        width: 20em;
-                        font-family: sans;
-                        font-size: 1.2em;
-                        color: #444;
-                        text-align: center;
-                    }
-                </style>
+                <meta http-equiv="refresh" content="0; URL='https://github.com/stencila/bindilla#readme'" />
             </head>
             <body>
-                <p>👋 Hello. I\'m <a href="https://github.com/stencila/bindilla">Bindilla</a> 🔗, a bridge between Stencila and Binder ✨</p>
+                <script>window.location = "https://github.com/stencila/bindilla#readme";</script>
             </body>
         </html
         ''')
@@ -97,11 +90,24 @@ class ManifestHandler(BaseHandler):
 
 class EnvironHandler(BaseHandler):
     """
-    Handles requests to launch an environment on Binder.
+    Handles requests to launch and shutdown an environment on Binder.
     """
 
     async def post(self, environ_id):
+        """
+        Launch a Binder for the environment.
+        """
         self.send(await HOST.launch_environ(environ_id))
+
+    async def delete(self, environ_id):
+        """
+        Shutdown a Binder for the environment.
+
+        Currently, this is a no-op, but is provided for API compatability
+        (clients may request for an environ to be stopped).
+        """
+        self.set_status(200)
+        self.finish()        
 
 
 class ProxyHandler(BaseHandler):
