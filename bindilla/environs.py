@@ -4,7 +4,7 @@ in Bindilla's manifest.
 """
 
 ENVIRONS = [
-    'https://github.com/nuest/stencila-py',
-    'https://github.com/nuest/stencila-r',
-    'https://github.com/nuest/stencila-multi'
+    'https://github.com/binder-examples/stencila-py',
+    'https://github.com/binder-examples/stencila-r',
+    'https://github.com/binder-examples/stencila-multi'
 ]
