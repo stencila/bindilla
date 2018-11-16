@@ -59,7 +59,7 @@ class IndexHandler(BaseHandler):
     """
     Handles requests to the index/home page.
 
-    Just redirect to the Github repo. Don't use a 301, or 302, 
+    Just redirect to the Github repo. Don't use a 301, or 302,
     because that can cause load balancer helth checks to fail.
     """
 
@@ -99,7 +99,7 @@ class EnvironHandler(BaseHandler):
         """
         self.send(await HOST.launch_environ(environ_id))
 
-    async def delete(self, environ_id):
+    async def delete(self, environ_id): #pylint: disable=unused-argument
         """
         Shutdown a Binder for the environment.
 
@@ -107,7 +107,7 @@ class EnvironHandler(BaseHandler):
         (clients may request for an environ to be stopped).
         """
         self.set_status(200)
-        self.finish()        
+        self.finish()
 
 
 class ProxyHandler(BaseHandler):
