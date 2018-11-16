@@ -10,13 +10,25 @@
 
 ## What?
 
-Bindilla acts as a bridge between [Stencila](https://stenci.la) and [Binder](https://mybinder.org/). Using this bridge, clients such as Stencila Desktop or RDS Reader can request, and interact with, alternative execution envionments provided by Binder.
+You can launch a Git repository containing a Dar archive directly on Binder. But what if you want to have the cotent of a reproducible article served from somewhere else and only use Binder for code execution?
+
+Bindilla acts as a bridge between [Stencila](https://stenci.la) interfaces and execution contexts hosted by [Binder](https://mybinder.org/). Using this bridge, clients such as Stencila Desktop or RDS Reader can request, and interact with, alternative execution envionments provided by Binder.
 
 This bridge relies on [`nbstencilaproxy`](https://github.com/minrk/nbstencilaproxy) being in the container image that is launched by Binder. [`repo2docker`](https://github.com/jupyter/repo2docker) will detect Dar folders in a repo and install `nbstencilaproxy` and other necessary requirements automatically.
 
 <p align="center">
   <img src="screenshot.png"/>
 </p>
+
+## Use
+
+To use Bindilla to connect a Stencila interface with a Binder container add the `hosts` URL parameter. For example:
+
+- An example of a Jupyter Notebook converted to JATS and hosted in an Amazon S3 bucket: http://builds.stenci.la/stencila/persist-some-cell-state-2018-07-27-e42260d/example.html?archive=py-jupyter&hosts=https://bindilla.stenci.la/v0
+
+- An example scientific article hosted in an Amazon S3 bucket: http://builds.stenci.la/stencila/update-the-introduction-rds-example-2018-11-16-db47651/example.html?archive=introduction-rds&hosts=https://bindilla.stenci.la/https://github.com/stencila/examples/elife-30274-binder/v0
+
+- The same example hosted on Substance's CDN: http://cdn.substance.io/rds-reader-4/example.html?archive=rds-user-testing&hosts=https://bindilla.stenci.la/https://github.com/stencila/examples/elife-30274-binder/v0
 
 ## Why?
 
