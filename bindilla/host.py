@@ -133,9 +133,9 @@ class Host:
                         else:
                             data['time'] = datetime.datetime.now(tz=pytz.UTC).isoformat()
                             binder['events'].append(data)
-                            binder['phase'] = data.get('phase')
-                            binder['id'] = data.get('url')
-                            binder['token'] = data.get('token')
+                            binder['phase'] = data.get('phase', '')
+                            binder['id'] = data.get('url', '')
+                            binder['token'] = data.get('token', '')
 
         # Build the binder URL from the environ
         environ = binder['environ']
@@ -157,7 +157,7 @@ class Host:
 
         # Determine which URL the client should use to connect to the Binder container
         binder_id = binder['id']
-        if binder_id[-1] == '/':
+        if len(binder_id) > 0 and binder_id[-1] == '/':
             binder_id = binder_id[:-1]
         if self._proxy:
             # Use a local path on this server to proxy to the binder (suppling token etc)
