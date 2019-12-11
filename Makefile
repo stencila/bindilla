@@ -4,7 +4,7 @@ setup:
 	pip install --user setuptools wheel pylint pytest
 
 setup-travis:
-	pip install setuptools wheel pylint pytest tox-travis
+	pip install setuptools wheel pylint pytest==3.8.2 pluggy==0.8.0 tox-travis
 
 run:
 	python3 -m bindilla
