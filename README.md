@@ -10,9 +10,12 @@
 
 ## What?
 
-You can launch a Git repository containing a Dar archive directly on Binder. But what if you want to have the cotent of a reproducible article served from somewhere else and only use Binder for code execution?
+Bindilla acts as a bridge between [Stencila](https://stenci.la) interfaces and execution contexts hosted by [Binder](https://mybinder.org/). Using this bridge, clients such as Stencila Desktop or eLife RDS Reader can launch, and interact with, alternative execution envionments provided by Binder.
 
-Bindilla acts as a bridge between [Stencila](https://stenci.la) interfaces and execution contexts hosted by [Binder](https://mybinder.org/). Using this bridge, clients such as Stencila Desktop or RDS Reader can request, and interact with, alternative execution envionments provided by Binder.
+## Why? 
+
+Binder supports launching a Git repository containing a Dar archive directly. But what if you want to have the cotent of a reproducible article served from somewhere else and only use Binder for code execution?
+
 
 This bridge relies on [`nbstencilaproxy`](https://github.com/minrk/nbstencilaproxy) being in the container image that is launched by Binder. [`repo2docker`](https://github.com/jupyter/repo2docker) will detect Dar folders in a repo and install `nbstencilaproxy` and other necessary requirements automatically.
 
