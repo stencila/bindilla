@@ -1,12 +1,12 @@
-# Bindilla
-
-[![Build status](https://travis-ci.org/stencila/bindilla.svg?branch=master)](https://travis-ci.org/stencila/bindilla)
-[![Code coverage](https://codecov.io/gh/stencila/bindilla/branch/master/graph/badge.svg)](https://codecov.io/gh/stencila/bindilla)
-[![Chat](https://badges.gitter.im/stencila/stencila.svg)](https://gitter.im/stencila/stencila)
+# 🦖 Bindilla
 
 <p align="center">
   <img src="bindilla.png" height="400px" alt="Bindilla. Aaarrrrgh!"/>
 </p>
+
+## :warning: Deprecated
+
+This project is deprecated and no longer maintained. Please see, our main repository, [stencila/stencila](https://github.com/stencila/stencila), for other projects that provide similar or alternative functionality.
 
 ## What?
 
@@ -14,8 +14,11 @@ Bindilla acts as a bridge between [Stencila](https://stenci.la) interfaces and e
 
 ## Why? 
 
-Binder supports launching a Git repository containing a Dar archive directly. But what if you want to have the cotent of a reproducible article served from somewhere else and only use Binder for code execution?
+Binder supports launching a Git repository containing a Dar archive directly. But what if you want to have the content of a reproducible article served from somewhere else and only use Binder for code execution?
 
+Stencila clients talk to execution contexts using an [API](https://stencila.github.io/schema/host.html). This API is implemented by several packages including [stencila/py](https://github.com/stencila/py), [stencila/r](https://github.com/stencila/r), and [stencila/node](https://github.com/stencila/node). These packages are available within a Binder container via [nbstencilaproxy](https://github.com/minrk/nbstencilaproxy). You can embed a reproducible document into the container and launch it via a per-user Binder container.
+
+However, in some cases you don't want to rely on having a running container to deliver your reproducible document to each reader. Instead, you can use a [progressive enhancement approach to reproducibility](https://elifesciences.org/labs/e5737fd5/designing-progressive-enhancement-into-the-academic-manuscript) in which reproducible elements can be made dynamic, on demand, based on user interaction. The API is designed to allow for this use case, allowing user interfaces to connect to alternative execution contexts both local and remote. By exposing the API as a bridge Bindilla enables this use case for execution contexts hosted on Binder.
 
 This bridge relies on [`nbstencilaproxy`](https://github.com/minrk/nbstencilaproxy) being in the container image that is launched by Binder. [`repo2docker`](https://github.com/jupyter/repo2docker) will detect Dar folders in a repo and install `nbstencilaproxy` and other necessary requirements automatically.
 
@@ -32,12 +35,6 @@ To use Bindilla to connect a Stencila interface with a Binder container add the 
 - An example scientific article hosted in an Amazon S3 bucket: http://builds.stenci.la/stencila/update-the-introduction-rds-example-2018-11-16-db47651/example.html?archive=introduction-rds&hosts=https://bindilla.stenci.la/https://github.com/stencila/examples/elife-30274-binder/v0
 
 - The same example hosted on Substance's CDN: http://cdn.substance.io/rds-reader-4/example.html?archive=rds-user-testing&hosts=https://bindilla.stenci.la/https://github.com/stencila/examples/elife-30274-binder/v0
-
-## Why?
-
-Stencila clients talk to execution contexts using an [API](https://stencila.github.io/schema/host.html). This API is implemented by several packages including [stencila/py](https://github.com/stencila/py), [stencila/r](https://github.com/stencila/r), and [stencila/node](https://github.com/stencila/node). These packages are available within a Binder container via [nbstencilaproxy](https://github.com/minrk/nbstencilaproxy). You can embed a reproducible document into the container and launch it via a per-user Binder container.
-
-However, in some cases you don't want to rely on having a running container to deliver your reproducible document to each reader. Instead, you can use a [progressive enhancement approach to reproducibility](https://elifesciences.org/labs/e5737fd5/designing-progressive-enhancement-into-the-academic-manuscript) in which reproducible elements can be made dynamic, on demand, based on user interaction. The API is designed to allow for this use case, allowing user interfaces to connect to alternative execution contexts both local and remote. By exposing the API as a bridge Bindilla enables this use case for execution contexts hosted on Binder.
 
 ## FAQ
 
